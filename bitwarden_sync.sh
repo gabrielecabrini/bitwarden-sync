@@ -1,28 +1,5 @@
 #!/bin/bash
 
-# We need to set some variables
-# Set your account name, Vault master password and API Info
-# Set the BitWarden Server we want to use
-
-export LC_CTYPE=C
-export LC_ALL=C
-
-export BW_TAR_PASS=$(openssl enc -d -aes-256-cbc -in bitwarden_backup_password.enc -pass file:bitwarden_backup_keyfile)
-
-#Source Variables
-export BW_ACCOUNT_SOURCE=xxxxx@yyy.com
-export BW_PASS_SOURCE=$(openssl enc -d -aes-256-cbc -in bitwarden_backup_password.enc -pass file:bitwarden_backup_keyfile)
-export BW_CLIENTID_SOURCE=xxxx
-export BW_CLIENTSECRET_SOURCE=xxxx
-export BW_SERVER_SOURCE=https://vaultwarden.mydomain.com
-
-# Destination Variables
-export BW_ACCOUNT_DEST=xxxxx@yyy.com
-export BW_PASS_DEST=$(openssl enc -d -aes-256-cbc -in bitwarden_restore_password.enc -pass file:bitwarden_restore_keyfile)
-export BW_CLIENTID_DEST=XXXXX
-export BW_CLIENTSECRET_DEST=XXXX
-export BW_SERVER_DEST=https://vault.bitwarden.com
-
 # Set start time
 START_TIME=$(date)
 echo "### Bitwarden Script - Start ###"
@@ -32,23 +9,25 @@ echo "################################"
 export BW_CLIENTID=${BW_CLIENTID_SOURCE}
 export BW_CLIENTSECRET=${BW_CLIENTSECRET_SOURCE}
 
+RID=`uuidgen`
+
 ##### Backup/Export from Source Bitwarden
 
 echo "### Backup - Start ###"
 echo "# Start of Backup Process #"
 
 # We need a backups directory
-mkdir -p backups
+mkdir -p /app/backups
 
 # Set the filename for our json export as variable
 SOURCE_EXPORT_OUTPUT_BASE="bw_export_"
 TIMESTAMP=$(date "+%Y%m%d%H%M%S")
-SOURCE_OUTPUT_FILE_JSON=backups/$SOURCE_EXPORT_OUTPUT_BASE$TIMESTAMP.json
+SOURCE_OUTPUT_FILE_JSON=/app/backups/$SOURCE_EXPORT_OUTPUT_BASE$TIMESTAMP.json
 
 # Delete previous backups over 30 days old
 echo "# Deleting previous backups older than 30 days... #"
 current_date=$(date +%Y-%m-%d)
-source_export_files=$(find backups -type f -name "bw_export_*.tar.gz.enc")
+source_export_files=$(find /app/backups -type f -name "bw_export_*.tar.gz.enc")
 find $source_export_files -type f -mtime +30 -exec rm -f {} +
 rm -f -R $SOURCE_EXPORT_OUTPUT_BASE*.json
 
@@ -134,7 +113,7 @@ done
 echo "# Item removal completed. #"
 
 # Find the latest backup file
-DEST_LATEST_BACKUP_TAR=$(find backups/bw_export_*.tar.gz.enc -type f -exec ls -t1 {} + | head -1)
+DEST_LATEST_BACKUP_TAR=$(find /app/backups/bw_export_*.tar.gz.enc -type f -exec ls -t1 {} + | head -1)
 
 # Set your encrypted file and password
 encrypted_source_tar="$DEST_LATEST_BACKUP_TAR"
@@ -148,7 +127,7 @@ openssl enc -d -aes-256-cbc -pass pass:"$source_tar_password" -in "$encrypted_so
 echo "# Decompression completed successfully. #"
 
 # Find the latest backup file
-DEST_LATEST_BACKUP_JSON=$(find backups/bw_export_*.json -type f -exec ls -t1 {} + | head -1)
+DEST_LATEST_BACKUP_JSON=$(find /root/app/backups/bw_export_*.json -type f -exec ls -t1 {} + | head -1)
 
 # Import the latest backup
 echo "# Importing the latest backup... #"
@@ -165,14 +144,3 @@ bw logout > /dev/null
 
 unset BW_CLIENTID
 unset BW_CLIENTSECRET
-
-unset BW_TAR_PASS
-unset BW_ACCOUNT_SOURCE
-unset BW_PASS_SOURCE
-unset BW_CLIENTID_SOURCE
-unset BW_CLIENTSECRET_SOURCE
-unset BW_SERVER_SOURCE
-unset BW_ACCOUNT_DEST
-unset BW_PASS_DEST
-unset BW_CLIENTSECRET_DEST
-unset BW_SERVER_DEST

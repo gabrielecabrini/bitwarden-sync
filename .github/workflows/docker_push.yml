@@ -1,7 +1,9 @@
-name: Bitwarden Sync Dev
+name: Docker Push Image
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -24,7 +26,4 @@ jobs:
         env:
           DOCKER_USERNAME: "${{ secrets.DOCKER_USERNAME }}"
         run: |
-          docker buildx build . -t '$DOCKER_USERNAME'/bitwarden-sync:dev -f docker/Dockerfile --platform linux/arm64,linux/amd64 --push
-
-# linux/arm/v5,
-# linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8
+          docker buildx build . -t $DOCKER_USERNAME/bitwarden-sync:latest -f docker/Dockerfile --platform linux/arm64,linux/amd64 --push
