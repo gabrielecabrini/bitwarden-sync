@@ -24,8 +24,6 @@
 
 ## How It Works
 
-The script runs automatically when the container starts. It performs the following steps:
-
 1. **Backs up** the vault from the source server
 2. **Encrypts** the backup as a `.tar.gz.enc` file
 3. **Purges** all data in the destination vault
